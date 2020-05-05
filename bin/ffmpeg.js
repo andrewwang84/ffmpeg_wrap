@@ -32,7 +32,7 @@ try {
     let ext = file.slice(file.lastIndexOf('.') + 1);
     let fileName = file.slice(0, file.lastIndexOf('.'));
 
-    if (!(/mp4|ts|tp|mkv/.test(ext))) {
+    if (!(/mp4|ts|tp|mkv|flv/.test(ext))) {
         throw ('\nError: Not Video!!');
     }
 
@@ -41,7 +41,6 @@ try {
     let start = '';
     let end = '';
     let duration = '';
-    let times = '';
     let args = [];
     switch (mode) {
         // M3U8 合併(test.m3u8)
@@ -78,17 +77,40 @@ try {
             break;
         // 影片 -> 圖片
         case 2:
-            start = readlineSync.question('開始時間: ', {
-                limit: /[0-9]{2}:[0-9]{2}:[0-9]{2}/,
-                limitMessage: '請輸入 hh:mm:ss 格式時間',
-                defaultInput: '00:00:00'
+            startH = readlineSync.question('開始時間 hh: ', {
+                limit: /[0-9]{2}/,
+                limitMessage: '請輸入 hh 格式時間',
+                defaultInput: '00'
             });
+            startM = readlineSync.question('mm: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 mm 格式時間',
+                defaultInput: '00'
+            });
+            startS = readlineSync.question('ss: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 ss 格式時間',
+                defaultInput: '00'
+            });
+            start = `${startH}:${startM}:${startS}`;
 
-            end = readlineSync.question('結束時間: ', {
-                limit: /[0-9]{2}:[0-9]{2}:[0-9]{2}/,
-                limitMessage: '請輸入 hh:mm:ss 格式時間',
-                defaultInput: '99:59:59'
+            endH = readlineSync.question('結束時間 hh: ', {
+                limit: /[0-9]{2}/,
+                limitMessage: '請輸入 hh 格式時間',
+                defaultInput: '00'
             });
+            endM = readlineSync.question('mm: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 mm 格式時間',
+                defaultInput: '00'
+            });
+            endS = readlineSync.question('ss: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 ss 格式時間',
+                defaultInput: '00'
+            });
+            end = `${endH}:${endM}:${endS}`;
+
             console.log(`\nStart: ${start}`);
             console.log(`End: ${end}\n`);
 
@@ -103,17 +125,40 @@ try {
             break;
         // 影片以固定時間分割(單段)
         case 3:
-            start = readlineSync.question('開始時間: ', {
-                limit: /[0-9]{2}:[0-9]{2}:[0-9]{2}/,
-                limitMessage: '請輸入 hh:mm:ss 格式時間',
-                defaultInput: '00:00:00'
+            startH = readlineSync.question('開始時間 hh: ', {
+                limit: /[0-9]{2}/,
+                limitMessage: '請輸入 hh 格式時間',
+                defaultInput: '00'
             });
+            startM = readlineSync.question('mm: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 mm 格式時間',
+                defaultInput: '00'
+            });
+            startS = readlineSync.question('ss: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 ss 格式時間',
+                defaultInput: '00'
+            });
+            start = `${startH}:${startM}:${startS}`;
 
-            duration = readlineSync.question('每段時間: ', {
-                limit: /[0-9]{2}:[0-9]{2}:[0-9]{2}/,
-                limitMessage: '請輸入 hh:mm:ss 格式時間',
-                defaultInput: '00:01:00'
+            durationH = readlineSync.question('每段時間 hh: ', {
+                limit: /[0-9]{2}/,
+                limitMessage: '請輸入 hh 格式時間',
+                defaultInput: '00'
             });
+            durationM = readlineSync.question('mm: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 mm 格式時間',
+                defaultInput: '00'
+            });
+            durationS = readlineSync.question('ss: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 ss 格式時間',
+                defaultInput: '00'
+            });
+            duration = `${durationH}:${durationM}:${durationS}`;
+
             console.log(`\nStart: ${start}`);
             console.log(`Duration: ${duration}\n`);
 
@@ -129,16 +174,40 @@ try {
             break;
         // 影片裁切
         case 4:
-            start = readlineSync.question('開始時間: ', {
-                limit: /[0-9]{2}:[0-9]{2}:[0-9]{2}/,
-                limitMessage: '請輸入 hh:mm:ss 格式時間',
-                defaultInput: '00:00:00'
+            startH = readlineSync.question('開始時間 hh: ', {
+                limit: /[0-9]{2}/,
+                limitMessage: '請輸入 hh 格式時間',
+                defaultInput: '00'
             });
-            end = readlineSync.question('結束時間: ', {
-                limit: /[0-9]{2}:[0-9]{2}:[0-9]{2}/,
-                limitMessage: '請輸入 hh:mm:ss 格式時間',
-                defaultInput: '00:01:00'
+            startM = readlineSync.question('mm: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 mm 格式時間',
+                defaultInput: '00'
             });
+            startS = readlineSync.question('ss: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 ss 格式時間',
+                defaultInput: '00'
+            });
+            start = `${startH}:${startM}:${startS}`;
+
+            endH = readlineSync.question('結束時間 hh: ', {
+                limit: /[0-9]{2}/,
+                limitMessage: '請輸入 hh 格式時間',
+                defaultInput: '00'
+            });
+            endM = readlineSync.question('mm: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 mm 格式時間',
+                defaultInput: '00'
+            });
+            endS = readlineSync.question('ss: ', {
+                limit: /[0-5][0-9]/,
+                limitMessage: '請輸入 ss 格式時間',
+                defaultInput: '00'
+            });
+            end = `${endH}:${endM}:${endS}`;
+
             console.log(`\nStart: ${start}`);
             console.log(`End: ${end}\n`);
 
