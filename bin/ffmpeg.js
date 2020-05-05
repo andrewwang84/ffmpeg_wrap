@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 // npm i -g .
+// npm uninstall -g ffmpeg_wrap
+// npm ls -g --depth=0
 const readlineSync = require('readline-sync');
 const fs = require('fs');
 const spawn = require('child_process').spawn;
