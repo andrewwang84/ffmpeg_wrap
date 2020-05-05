@@ -1,0 +1,13 @@
+{
+  "name": "ffmpeg-wrap",
+  "version": "1.0.0",
+  "description": "",
+  "bin": {
+    "video": "./bin/ffmpeg.js"
+  },
+  "author": "AndrewWang",
+  "license": "ISC",
+  "dependencies": {
+    "readline-sync": "^1.4.10"
+  }
+}
