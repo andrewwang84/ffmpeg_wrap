@@ -169,7 +169,7 @@ try {
                 '-i', `${fileName}.${ext}`,
                 '-acodec', 'copy',
                 '-vcodec', 'copy',
-                `${fileName}_${start}_${duration}_duration_cut.${ext}`
+                `${fileName}_${start.replace(/:/g, '')}_${duration.replace(/:/g, '')}_duration_cut.${ext}`
             ];
             break;
         // 影片裁切
@@ -218,7 +218,7 @@ try {
                 '-i', `${fileName}.${ext}`,
                 '-acodec', 'copy',
                 '-vcodec', 'copy',
-                `${fileName}_${start}_${end}_cut.${ext}`
+                `${fileName}_${start.replace(/:/g, '')}_${end.replace(/:/g, '')}_cut.${ext}`
             ];
             break;
         default:
