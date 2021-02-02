@@ -174,6 +174,7 @@ try {
             break;
         // 影片裁切
         case 4:
+        default:
             startH = readlineSync.question('Start at hh: ', {
                 limit: /[0-9]{2}/,
                 limitMessage: 'Please input hh format time',
@@ -220,8 +221,6 @@ try {
                 '-vcodec', 'copy',
                 `${fileName}_${start.replace(/:/g, '')}_${end.replace(/:/g, '')}_cut.${ext}`
             ];
-            break;
-        default:
             break;
     }
 
