@@ -194,6 +194,9 @@ try {
         case 5:
             vidRes = readlineSync.keyInSelect(res, 'Resolution：');
 
+            if (res[vidRes] == undefined || resXY[vidRes] == undefined) {
+                throw ('\nError: Program Stopped!!');
+            }
             console.log(`${res[vidRes]} => ${resXY[vidRes]}`);
 
             cmdPreview = `ffmpeg -i ${fileName}.${ext} -i Logo-crop2.png -filter_complex "overlay=${resXY[vidRes]}" ${fileName}_watermark.${ext}`;
