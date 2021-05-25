@@ -190,9 +190,22 @@ try {
                 `${fileName}_${start.replace(/:/g, '')}_${duration.replace(/:/g, '')}_duration_cut.${ext}`
             ];
             break;
+        // 加浮水印
+        case 5:
+            vidRes = readlineSync.keyInSelect(res, 'Resolution：');
+
+            console.log(`${res[vidRes]} => ${resXY[vidRes]}`);
+
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -i Logo-crop2.png -filter_complex "overlay=${resXY[vidRes]}" ${fileName}_watermark.${ext}`;
+            args = [
+                '-i', `${fileName}.${ext}`,
+                '-i', `Logo-crop2.png`,
+                '-filter_complex', `overlay=${resXY[vidRes]}`,
+                `${fileName}_watermark.${ext}`
+            ];
+            break;
         // 影片裁切
         case 4:
-        default:
             startH = readlineSync.question('Start at hh: ', {
                 limit: /[0-9]{2}/,
                 limitMessage: 'Please input hh format time',
@@ -239,21 +252,6 @@ try {
                 '-vcodec', 'copy',
                 `${fileName}_${start.replace(/:/g, '')}_${end.replace(/:/g, '')}_cut.${ext}`
             ];
-            break;
-        // 加浮水印
-        case 5:
-            vidRes = readlineSync.keyInSelect(res, 'Resolution：');
-
-            console.log(`${res[vidRes]} => ${resXY[vidRes]}`);
-
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -i Logo-crop2.png -filter_complex "overlay=${resXY[vidRes]}" ${fileName}_watermark.${ext}`;
-            args = [
-                '-i', `${fileName}.${ext}`,
-                '-i', `Logo-crop2.png`,
-                '-filter_complex', `overlay=${resXY[vidRes]}`,
-                `${fileName}_watermark.${ext}`
-            ];
-            break;
         default:
             break;
     }
