@@ -3,6 +3,7 @@
 // npm i -g .
 // npm uninstall -g ffmpeg_wrap
 // npm ls -g --depth=0
+// npm update -g ffmpeg_wrap
 const readlineSync = require('readline-sync');
 const fs = require('fs');
 const spawn = require('child_process').spawn;
@@ -15,7 +16,24 @@ let modes = [
     'Video Concat',
     'Video -> Thumbnails',
     'Cut Video by Duration',
-    'Cut Video by Time'
+    'Cut Video by Time',
+    'Add Watermark'
+];
+
+let res = [
+    '1280x720',
+    '1920x1080',
+    '3840*2160',
+    '2160*3840',
+    '4096*2160'
+];
+
+let resXY = [
+    '871:680',
+    '1511:1040',
+    '3431:2120',
+    '1751:3800',
+    '3687:2120'
 ];
 
 try {
@@ -219,6 +237,20 @@ try {
                 '-acodec', 'copy',
                 '-vcodec', 'copy',
                 `${fileName}_${start.replace(/:/g, '')}_${end.replace(/:/g, '')}_cut.${ext}`
+            ];
+            break;
+        // 加浮水印
+        case 5:
+            vidRes = readlineSync.keyInSelect(res, 'Resolution：');
+
+            console.log(`${res[vidRes]} => ${resXY[vidRes]}`);
+
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -i Logo-crop2.png -filter_complex "overlay=${resXY[vidRes]}" ${fileName}_watermark.${ext}`;
+            args = [
+                '-i', `${fileName}.${ext}`,
+                '-i', `Logo-crop2.png`,
+                '-filter_complex', `overlay=${resXY[vidRes]}`,
+                `${fileName}_watermark.${ext}`
             ];
             break;
         default:
