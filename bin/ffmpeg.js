@@ -24,18 +24,20 @@ let res = [
     '1280x720',
     '1920x1080',
     '1080x1920',
-    '3840*2160',
-    '2160*3840',
-    '4096*2160'
+    '3840x2160',
+    '2160x3840',
+    '4096x2160',
+    'Other'
 ];
 
 let resXY = [
-    '871:680',
-    '1511:1040',
-    '671:1880',
-    '3431:2120',
-    '1751:3800',
-    '3687:2120'
+    '878:692',
+    '1518:1052',
+    '678:1892',
+    '3438:2132',
+    '1758:3814',
+    '3694:2132',
+    '1'
 ];
 
 try {
@@ -199,13 +201,32 @@ try {
             if (res[vidRes] == undefined || resXY[vidRes] == undefined) {
                 throw ('\nError: Program Stopped!!');
             }
-            console.log(`${res[vidRes]} => ${resXY[vidRes]}`);
 
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -i Logo-crop2.png -filter_complex "overlay=${resXY[vidRes]}" ${fileName}_watermark.${ext}`;
+            let vidSize = res[vidRes];
+            let markPos = resXY[vidRes];
+
+            if (markPos == 1) {
+                let w = readlineSync.question('Width: ', {
+                    limit: /[0-9]+/,
+                    limitMessage: 'Width',
+                    defaultInput: '1920'
+                });
+                let h = readlineSync.question('Height: ', {
+                    limit: /[0-9]+/,
+                    limitMessage: 'Height',
+                    defaultInput: '1080'
+                });
+                vidSize = `${w}x${h}`;
+                markPos = `${w-402}:${h-28}`;
+            }
+
+            console.log(`${vidSize} => ${markPos}`);
+
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -i Logo-crop2.png -filter_complex "overlay=${markPos}" ${fileName}_watermark.${ext}`;
             args = [
                 '-i', `${fileName}.${ext}`,
                 '-i', `Logo-crop2.png`,
-                '-filter_complex', `overlay=${resXY[vidRes]}`,
+                '-filter_complex', `overlay=${markPos}`,
                 `${fileName}_watermark.${ext}`
             ];
             break;
