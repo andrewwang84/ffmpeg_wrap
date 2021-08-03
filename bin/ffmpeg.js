@@ -40,15 +40,22 @@ let resXY = [
     '1'
 ];
 
+let markPosModes = [
+    'Top Left',
+    'Top Right',
+    'Bottom Left',
+    'Bottom Right'
+];
+
 try {
     if (file == undefined) {
         throw (`Usage: video [fileName] [fileName]......`);
     }
 
-    mode = readlineSync.keyInSelect(modes, 'Enter Mode：');
-    console.log(`\nMode： [${mode + 1}] ${modes[mode]}\n`);
+    mode = readlineSync.keyInSelect(modes, 'Enter Mode: ');
+    console.log(`\nMode: [${mode + 1}] ${modes[mode]}\n`);
     if (mode !== 0 && mode !== 1) {
-        console.log(`File： ${file}`);
+        console.log(`File: ${file}`);
     }
 
     let ext = file.slice(file.lastIndexOf('.') + 1);
@@ -196,28 +203,58 @@ try {
             break;
         // 加浮水印
         case 5:
-            vidRes = readlineSync.keyInSelect(res, 'Resolution：');
+            let vidRes = readlineSync.keyInSelect(res, 'Resolution: ');
 
             if (res[vidRes] == undefined || resXY[vidRes] == undefined) {
                 throw ('\nError: Program Stopped!!');
             }
 
+            let markPosMode = readlineSync.keyInSelect(markPosModes, 'Mode: ', { defaultInput: '4' });
+            console.log(`\nMarkPosMode: [${markPosMode + 1}] ${markPosModes[markPosMode]}\n`);
+
             let vidSize = res[vidRes];
             let markPos = resXY[vidRes];
 
+            let w = 1;
+            let h = 1;
             if (markPos == 1) {
-                let w = readlineSync.question('Width: ', {
+                w = readlineSync.question('Width: ', {
                     limit: /[0-9]+/,
                     limitMessage: 'Width',
                     defaultInput: '1920'
                 });
-                let h = readlineSync.question('Height: ', {
+                h = readlineSync.question('Height: ', {
                     limit: /[0-9]+/,
                     limitMessage: 'Height',
                     defaultInput: '1080'
                 });
                 vidSize = `${w}x${h}`;
-                markPos = `${w-402}:${h-28}`;
+                markPos = `${w - 402}:${h - 28}`;
+            } else {
+                let sizes = vidSize.split('x');
+                w = sizes[0];
+                h = sizes[1];
+            }
+
+            switch (markPosMode) {
+                // 右上
+                case 1:
+                    let offsetW = w - 402;
+                    markPos = `${offsetW}:2`;
+                    break;
+                // 左下
+                case 2:
+                    let offsetH = h - 28;
+                    markPos = `2:${offsetH}`;
+                    break;
+                // 右下
+                case 3:
+                    break;
+                // 左上
+                case 0:
+                default:
+                    markPos = "2:2";
+                    break;
             }
 
             console.log(`${vidSize} => ${markPos}`);
