@@ -1,9 +1,9 @@
 {
   "name": "ffmpeg-wrap",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "",
   "bin": {
-    "video": "./bin/ffmpeg.js"
+    "vid": "./bin/ffmpeg.js"
   },
   "author": "AndrewWang",
   "license": "ISC",

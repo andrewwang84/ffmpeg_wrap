@@ -12,12 +12,13 @@ var mode = '';
 var file = process.argv[2];
 
 let modes = [
+    'Cut Video by Time',
+    'Add Watermark',
+    'Cut Video by Duration',
     'M3U8 Merge(test.m3u8)',
     'Video Concat',
     'Video -> Thumbnails',
-    'Cut Video by Duration',
-    'Cut Video by Time',
-    'Add Watermark'
+    'Video downscale',
 ];
 
 let res = [
@@ -31,12 +32,12 @@ let res = [
 ];
 
 let resXY = [
-    '878:692',
-    '1518:1052',
-    '678:1892',
-    '3438:2132',
-    '1758:3814',
-    '3694:2132',
+    '978:692',
+    '1618:1052',
+    '778:1892',
+    '3538:2132',
+    '1858:3814',
+    '3794:2132',
     '1'
 ];
 
@@ -49,7 +50,7 @@ let markPosModes = [
 
 try {
     if (file == undefined) {
-        throw (`Usage: video [fileName] [fileName]......`);
+        throw (`Usage: vid [fileName] [fileName]......`);
     }
 
     mode = readlineSync.keyInSelect(modes, 'Enter Mode: ');
@@ -73,7 +74,7 @@ try {
     let args = [];
     switch (mode) {
         // M3U8 合併(test.m3u8)
-        case 0:
+        case 3:
             cmdPreview = `ffmpeg -protocol_whitelist "file,http,https,tcp,tls,crypto" -allowed_extensions ALL -i test.m3u8 -c copy m3u8_merge.${ext}`;
             args = [
                 '-protocol_whitelist', '"file,http,https,tcp,tls,crypto"',
@@ -84,28 +85,32 @@ try {
             ];
             break;
         // 影片合併
-        case 1:
+        case 4:
             let data = '';
             for (let i = 2; i < process.argv.length; i++) {
                 let file = process.argv[i];
-                data += `file "${file}"\n`;
+                data += `file '${file}'\n`;
             }
+
+            let name = process.argv[2];
+            name = name.slice(0, file.lastIndexOf('.'));
 
             fs.writeFileSync('file.txt', data, (err) => {
                 if (err) throw err;
                 console.log('file.txt saved!\n');
             });
 
-            cmdPreview = `ffmpeg -f concat -i file.txt -c copy concat.${ext}`;
+            cmdPreview = `ffmpeg -f concat -safe 0 -i file.txt -c copy ${name}_concat.${ext}`;
             args = [
                 '-f', 'concat',
+                '-safe', '0',
                 '-i', 'file.txt',
                 '-c', 'copy',
-                `concat.${ext}`
+                `${name}_concat.${ext}`
             ];
             break;
         // 影片 -> 圖片
-        case 2:
+        case 5:
             startH = readlineSync.question('Start at hh: ', {
                 limit: /[0-9]{2}/,
                 limitMessage: 'Please input hh format time',
@@ -153,7 +158,7 @@ try {
             ];
             break;
         // 影片以固定時間分割(單段)
-        case 3:
+        case 2:
             startH = readlineSync.question('Start at hh: ', {
                 limit: /[0-9]{2}/,
                 limitMessage: 'Please input hh format time',
@@ -202,7 +207,7 @@ try {
             ];
             break;
         // 加浮水印
-        case 5:
+        case 1:
             let vidRes = readlineSync.keyInSelect(res, 'Resolution: ');
 
             if (res[vidRes] == undefined || resXY[vidRes] == undefined) {
@@ -229,7 +234,7 @@ try {
                     defaultInput: '1080'
                 });
                 vidSize = `${w}x${h}`;
-                markPos = `${w - 402}:${h - 28}`;
+                markPos = `${w - 302}:${h - 28}`;
             } else {
                 let sizes = vidSize.split('x');
                 w = sizes[0];
@@ -239,7 +244,7 @@ try {
             switch (markPosMode) {
                 // 右上
                 case 1:
-                    let offsetW = w - 402;
+                    let offsetW = w - 302;
                     markPos = `${offsetW}:2`;
                     break;
                 // 左下
@@ -267,8 +272,30 @@ try {
                 `${fileName}_watermark.${ext}`
             ];
             break;
+        // 影片有損縮小
+        case 6:
+            let height = readlineSync.question("Height (Don't input both Height and Width): ", {
+                limit: /[0-9]+/,
+                limitMessage: 'Height',
+                defaultInput: '-1'
+            });
+            let width = readlineSync.question("Width (Don't input both Height and Width): ", {
+                limit: /[0-9]+/,
+                limitMessage: 'Width',
+                defaultInput: '-1'
+            });
+            console.log(`\nHeight: ${height}\n`);
+            console.log(`\Width: ${width}\n`);
+
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -vf scale=${width}:${height} ${fileName}_scale_out.${ext}`;
+            args = [
+                '-i', `${fileName}.${ext}`,
+                '-vf', `scale=${width}:${height}`,
+                `${fileName}_scale_out.${ext}`
+            ];
+            break;
         // 影片裁切
-        case 4:
+        case 0:
             startH = readlineSync.question('Start at hh: ', {
                 limit: /[0-9]{2}/,
                 limitMessage: 'Please input hh format time',
