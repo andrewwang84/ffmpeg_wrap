@@ -309,7 +309,7 @@ try {
             console.log(`\ncrf: ${crf}\n`);
             console.log(`\preset: ${preset}\n`);
 
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v libx264 -crf ${crf} -preset ${preset} -c:a copy 00_${fileName}.${ext}`;
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v libx264 -crf ${crf} -preset ${preset} -c:a copy ${fileName}_re.${ext}`;
             args = [
                 '-i', `${fileName}.${ext}`,
                 '-c:v', `libx264`,
