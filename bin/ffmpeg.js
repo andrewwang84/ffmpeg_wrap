@@ -19,6 +19,7 @@ let modes = [
     'Video Concat',
     'Video -> Thumbnails',
     'Video downscale',
+    'Video Size and Bitrate Reduce',
 ];
 
 let res = [
@@ -292,6 +293,29 @@ try {
                 '-i', `${fileName}.${ext}`,
                 '-vf', `scale=${width}:${height}`,
                 `${fileName}_scale_out.${ext}`
+            ];
+            break;
+        // 影片有損縮小大小 & 碼率
+        case 7:
+            let crf = readlineSync.question("crf (Default: 18): ", {
+                limit: /[0-9]+/,
+                limitMessage: 'crf',
+                defaultInput: '18'
+            });
+            let preset = readlineSync.question("preset (Default: veryslow): ", {
+                limitMessage: 'preset',
+                defaultInput: 'veryslow'
+            });
+            console.log(`\ncrf: ${crf}\n`);
+            console.log(`\preset: ${preset}\n`);
+
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v libx264 -crf ${crf} -preset ${preset} -c:a copy 00_${fileName}.${ext}`;
+            args = [
+                '-i', `${fileName}.${ext}`,
+                '-c:v', `libx264`,
+                '-crf', `${crf}`,
+                '-preset', `${preset}`,
+                `${fileName}_d.${ext}`
             ];
             break;
         // 影片裁切
