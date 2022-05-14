@@ -20,6 +20,7 @@ let modes = [
     'Video -> Thumbnails',
     'Video downscale',
     'Video Size and Bitrate Reduce',
+    'Video Size and Bitrate Reduce with Default Value'
 ];
 
 let res = [
@@ -265,11 +266,13 @@ try {
 
             console.log(`${vidSize} => ${markPos}`);
 
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -i Logo-crop2.png -filter_complex "overlay=${markPos}" ${fileName}_watermark.${ext}`;
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -i Logo-crop2.png -filter_complex "overlay=${markPos}" -crf 18 -preset slow ${fileName}_watermark.${ext}`;
             args = [
                 '-i', `${fileName}.${ext}`,
                 '-i', `Logo-crop2.png`,
                 '-filter_complex', `overlay=${markPos}`,
+                '-crf', `18`,
+                '-preset', `slow`,
                 `${fileName}_watermark.${ext}`
             ];
             break;
@@ -302,9 +305,9 @@ try {
                 limitMessage: 'crf',
                 defaultInput: '18'
             });
-            let preset = readlineSync.question("preset (Default: veryslow): ", {
+            let preset = readlineSync.question("preset (Default: slow): ", {
                 limitMessage: 'preset',
-                defaultInput: 'veryslow'
+                defaultInput: 'slow'
             });
             console.log(`\ncrf: ${crf}\n`);
             console.log(`\preset: ${preset}\n`);
@@ -315,7 +318,18 @@ try {
                 '-c:v', `libx264`,
                 '-crf', `${crf}`,
                 '-preset', `${preset}`,
-                `${fileName}_d.${ext}`
+                `${fileName}_re.${ext}`
+            ];
+            break;
+        // 影片有損縮小大小 & 碼率 直接套預設值
+        case 8:
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v libx264 -crf 18 -preset slow -c:a copy ${fileName}_re.${ext}`;
+            args = [
+                '-i', `${fileName}.${ext}`,
+                '-c:v', `libx264`,
+                '-crf', `18`,
+                '-preset', `slow`,
+                `${fileName}_re.${ext}`
             ];
             break;
         // 影片裁切
