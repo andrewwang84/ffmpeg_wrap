@@ -389,17 +389,25 @@ try {
     let proc = spawn(cmd, args);
 
     proc.stdout.on('data', function (data) {
-        console.log(`stdout: ${data}`);
+        console.log(`[stdout] ${data}`);
     });
 
     proc.stderr.setEncoding("utf8")
-    proc.stderr.on('data', function (data) {
-        console.log(`stderr: ${data}`);
-    });
-
-    proc.on('close', function () {
-        console.log('Done');
-    });
+        .on('data', (data) => {
+            console.log(`[stderr] ${data}`);
+        })
+        .on('message', msg => {
+            console.log(`[message] ${msg}`);
+        })
+        .on('error', err => {
+            console.log(`[error] ${err}`);
+        })
+        .on('exit', (code, signal) => {
+            console.log(`[exit] code:${code} signal:${signal}`);
+        })
+        .on('close', () => {
+            console.log(`[close] ${fileName}.${ext} Done`);
+        });
 } catch (error) {
     console.log(error);
 }
