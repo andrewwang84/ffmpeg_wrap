@@ -300,22 +300,22 @@ try {
             break;
         // 影片有損縮小大小 & 碼率
         case 7:
-            let crf = readlineSync.question("crf (Default: 18): ", {
+            let crf = readlineSync.question("crf (Default: 23): ", {
                 limit: /[0-9]+/,
                 limitMessage: 'crf',
-                defaultInput: '18'
+                defaultInput: '23'
             });
-            let preset = readlineSync.question("preset (Default: slow): ", {
+            let preset = readlineSync.question("preset (Default: medium): ", {
                 limitMessage: 'preset',
-                defaultInput: 'slow'
+                defaultInput: 'medium'
             });
             console.log(`\ncrf: ${crf}\n`);
             console.log(`\preset: ${preset}\n`);
 
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v libx264 -crf ${crf} -preset ${preset} -c:a copy ${fileName}_re.${ext}`;
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v libx265 -crf ${crf} -preset ${preset} -c:a copy ${fileName}_re.${ext}`;
             args = [
                 '-i', `${fileName}.${ext}`,
-                '-c:v', `libx264`,
+                '-c:v', `libx265`,
                 '-crf', `${crf}`,
                 '-preset', `${preset}`,
                 `${fileName}_re.${ext}`
@@ -323,12 +323,12 @@ try {
             break;
         // 影片有損縮小大小 & 碼率 直接套預設值
         case 8:
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v libx264 -crf 18 -preset slow -c:a copy ${fileName}_re.${ext}`;
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v libx265 -crf 23 -preset medium -c:a copy ${fileName}_re.${ext}`;
             args = [
                 '-i', `${fileName}.${ext}`,
-                '-c:v', `libx264`,
-                '-crf', `18`,
-                '-preset', `slow`,
+                '-c:v', `libx265`,
+                '-crf', `23`,
+                '-preset', `medium`,
                 `${fileName}_re.${ext}`
             ];
             break;

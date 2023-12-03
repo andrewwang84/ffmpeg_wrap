@@ -3,7 +3,8 @@
   "version": "1.0.4",
   "description": "",
   "bin": {
-    "vid": "./bin/ffmpeg.js"
+    "vid": "./bin/ffmpeg.js",
+    "archive": "./bin/archive.js"
   },
   "author": "AndrewWang",
   "license": "ISC",
