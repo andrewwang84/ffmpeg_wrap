@@ -34,7 +34,7 @@ function readDirectory(directory, destination) {
 
         } else {
             // If it's a directory, recursively call the function for that directory
-            console.log('Directory:', item);
+            // console.log('Directory:', item);
             readDirectory(itemPath, dir);
         }
     });
@@ -61,6 +61,8 @@ function doesDirectoryExist(directoryPath) {
         }
 
         readDirectory(dir, dir);
+
+        console.log(moveRecord);
     } catch (e) {
         console.error("We've thrown! Whoops!", e);
     }

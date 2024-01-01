@@ -74,6 +74,10 @@ try {
     let end = '';
     let duration = '';
     let args = [];
+    let tsStr = '';
+    let tsArr = [];
+    let args1 = [];
+    let args2 = [];
     switch (mode) {
         // M3U8 合併(test.m3u8)
         case 3:
@@ -198,15 +202,22 @@ try {
             console.log(`\nStart: ${start}`);
             console.log(`Duration: ${duration}\n`);
 
-            cmdPreview = `ffmpeg -ss ${start} -t ${duration} -i ${fileName}.${ext} -acodec copy -vcodec copy ${fileName}_cut.${ext}`;
-            args = [
+            tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
+            tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
+
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -ss ${start} -t ${duration} -c copy ${tsStr} ${fileName}_cut.${ext}`;
+
+            args1 = [
+                '-i', `${fileName}.${ext}`,
                 '-ss', start,
                 '-t', duration,
-                '-i', `${fileName}.${ext}`,
-                '-acodec', 'copy',
-                '-vcodec', 'copy',
+                '-c', 'copy',
+            ];
+            args2 = [
                 `${fileName}_${start.replace(/:/g, '')}_${duration.replace(/:/g, '')}_duration_cut.${ext}`
             ];
+
+            args = [...args1, ...tsArr, ...args2];
             break;
         // 加浮水印
         case 1:
@@ -371,15 +382,21 @@ try {
             console.log(`\nStart: ${start}`);
             console.log(`End: ${end}\n`);
 
-            cmdPreview = `ffmpeg -ss ${start} -to ${end} -i ${fileName}.${ext} -acodec copy -vcodec copy ${fileName}_cut.${ext}`;
-            args = [
+            tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
+            tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
+
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -ss ${start} -to ${end} -c copy ${tsStr} ${fileName}_cut.${ext}`;
+            args1 = [
+                '-i', `${fileName}.${ext}`,
                 '-ss', start,
                 '-to', end,
-                '-i', `${fileName}.${ext}`,
-                '-acodec', 'copy',
-                '-vcodec', 'copy',
+                '-c', 'copy',
+            ];
+            args2 = [
                 `${fileName}_${start.replace(/:/g, '')}_${end.replace(/:/g, '')}_cut.${ext}`
             ];
+
+            args = [...args1, ...tsArr, ...args2];
         default:
             break;
     }
