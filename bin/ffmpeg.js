@@ -12,15 +12,14 @@ var mode = '';
 var file = process.argv[2];
 
 let modes = [
-    'Cut Video by Time',
     'Add Watermark',
+    'Cut Video by Time',
     'Cut Video by Duration',
     'M3U8 Merge(test.m3u8)',
     'Video Concat',
     'Video -> Thumbnails',
-    'Video downscale',
     'Video Size and Bitrate Reduce',
-    'Video Size and Bitrate Reduce with Default Value'
+    'Remove Audio'
 ];
 
 let res = [
@@ -220,7 +219,7 @@ try {
             args = [...args1, ...tsArr, ...args2];
             break;
         // 加浮水印
-        case 1:
+        case 0:
             let vidRes = readlineSync.keyInSelect(res, 'Resolution: ');
 
             if (res[vidRes] == undefined || resXY[vidRes] == undefined) {
@@ -287,30 +286,8 @@ try {
                 `${fileName}_watermark.${ext}`
             ];
             break;
-        // 影片有損縮小
-        case 6:
-            let height = readlineSync.question("Height (Don't input both Height and Width): ", {
-                limit: /[0-9]+/,
-                limitMessage: 'Height',
-                defaultInput: '-1'
-            });
-            let width = readlineSync.question("Width (Don't input both Height and Width): ", {
-                limit: /[0-9]+/,
-                limitMessage: 'Width',
-                defaultInput: '-1'
-            });
-            console.log(`\nHeight: ${height}\n`);
-            console.log(`\Width: ${width}\n`);
-
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -vf scale=${width}:${height} ${fileName}_scale_out.${ext}`;
-            args = [
-                '-i', `${fileName}.${ext}`,
-                '-vf', `scale=${width}:${height}`,
-                `${fileName}_scale_out.${ext}`
-            ];
-            break;
         // 影片有損縮小大小 & 碼率
-        case 7:
+        case 6:
             let crf = readlineSync.question("crf (Default: 23): ", {
                 limit: /[0-9]+/,
                 limitMessage: 'crf',
@@ -332,19 +309,18 @@ try {
                 `${fileName}_re.${ext}`
             ];
             break;
-        // 影片有損縮小大小 & 碼率 直接套預設值
-        case 8:
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v libx265 -crf 23 -preset medium -c:a copy ${fileName}_re.${ext}`;
+        // 移除音軌
+        case 7:
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v copy -an ${fileName}_mute.${ext}`;
             args = [
                 '-i', `${fileName}.${ext}`,
-                '-c:v', `libx265`,
-                '-crf', `23`,
-                '-preset', `medium`,
-                `${fileName}_re.${ext}`
+                '-c:v', `copy`,
+                '-an',
+                `${fileName}_mute.${ext}`
             ];
             break;
         // 影片裁切
-        case 0:
+        case 1:
             startH = readlineSync.question('Start at hh: ', {
                 limit: /[0-9]{2}/,
                 limitMessage: 'Please input hh format time',
