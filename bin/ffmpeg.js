@@ -22,6 +22,7 @@ let modes = [
     'Remove Audio',
     'Re-Encode to Telegram Webm',
     'Cut & Re-Encode to Telegram Webm',
+    'Line APNG to Telegram Webm',
 ];
 
 let res = [
@@ -68,7 +69,7 @@ try {
     let ext = file.slice(file.lastIndexOf('.') + 1);
     let fileName = file.slice(0, file.lastIndexOf('.'));
 
-    if (!(/mp4|ts|tp|mkv|flv/.test(ext))) {
+    if (!(/mp4|ts|tp|mkv|flv|png/.test(ext))) {
         throw ('\nError: Not Video!!');
     }
 
@@ -504,6 +505,20 @@ try {
             ];
 
             args = [...args1, ...tsArr, ...args2];
+            break;
+        // Line APNG 轉成 telegram 影片貼圖格式的 webm
+        case 10:
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -vf "fps=30,scale='if(gt(a,1),512,-2)':'if(gt(a,1),-2,512)'" -c:v libvpx-vp9 -movflags +faststart -pix_fmt yuva420p ${fileName}_tg.webm`;
+
+            args = [
+                '-i', `${fileName}.${ext}`,
+                '-vf', `fps=30,scale='if(gt(a,1),512,-2)':'if(gt(a,1),-2,512)'`,
+                '-c:v', `libvpx-vp9`,
+                '-movflags',
+                '+faststart',
+                '-pix_fmt', 'yuva420p',
+                `${fileName}_line_tg.webm`
+            ];
             break;
         default:
             throw ('\nCommand Not Found!!');
