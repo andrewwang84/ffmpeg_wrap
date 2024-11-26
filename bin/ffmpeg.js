@@ -424,10 +424,10 @@ try {
             break;
         // 產生 telegram 影片貼圖格式的 webm
         case 8:
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -vf "scale='if(gt(a,1),512,-2)':'if(gt(a,1),-2,512)'" -c:v libvpx-vp9 -an -crf 24 -b:v 0 -r 30 ${fileName}_tg.webm`;
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -vf "scale='if(eq(a,1),512,if(gt(a,1),512,-2))':'if(eq(a,1),512,if(gt(a,1),-2,512))'" -c:v libvpx-vp9 -an -crf 24 -b:v 0 -r 30 ${fileName}_tg.webm`;
             args = [
                 '-i', `${fileName}.${ext}`,
-                '-vf', `scale='if(gt(a,1),512,-2)':'if(gt(a,1),-2,512)'`,
+                '-vf', `scale='if(eq(a,1),512,if(gt(a,1),512,-2))':'if(eq(a,1),512,if(gt(a,1),-2,512))'`,
                 '-c:v', `libvpx-vp9`,
                 '-an',
                 '-crf', '24',
@@ -486,13 +486,13 @@ try {
                 defaultInput: '24'
             });
 
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -ss ${start} -t ${duration} -vf "scale='if(gt(a,1),512,-2)':'if(gt(a,1),-2,512)'" -c:v libvpx-vp9 -an -crf ${crf} -b:v 0 -r 30 ${tsStr} ${fileName}_tg.webm`;
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -ss ${start} -t ${duration} -vf "scale='if(eq(a,1),512,if(gt(a,1),512,-2))':'if(eq(a,1),512,if(gt(a,1),-2,512))'" -c:v libvpx-vp9 -an -crf ${crf} -b:v 0 -r 30 ${tsStr} ${fileName}_tg.webm`;
 
             args1 = [
                 '-i', `${fileName}.${ext}`,
                 '-ss', start,
                 '-t', duration,
-                '-vf', `scale='if(gt(a,1),512,-2)':'if(gt(a,1),-2,512)'`,
+                '-vf', `scale='if(eq(a,1),512,if(gt(a,1),512,-2))':'if(eq(a,1),512,if(gt(a,1),-2,512))'`,
                 '-c:v', `libvpx-vp9`,
                 '-an',
                 '-crf', `${crf}`,
@@ -508,11 +508,11 @@ try {
             break;
         // Line APNG 轉成 telegram 影片貼圖格式的 webm
         case 10:
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -vf "fps=30,scale='if(gt(a,1),512,-2)':'if(gt(a,1),-2,512)'" -c:v libvpx-vp9 -an -movflags +faststart -pix_fmt yuva420p ${fileName}_tg.webm`;
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -vf "fps=30,scale='if(eq(a,1),512,if(gt(a,1),512,-2))':'if(eq(a,1),512,if(gt(a,1),-2,512))'" -c:v libvpx-vp9 -an -movflags +faststart -pix_fmt yuva420p ${fileName}_tg.webm`;
 
             args = [
                 '-i', `${fileName}.${ext}`,
-                '-vf', `fps=30,scale='if(gt(a,1),512,-2)':'if(gt(a,1),-2,512)'`,
+                '-vf', `fps=30,scale='if(eq(a,1),512,if(gt(a,1),512,-2))':'if(eq(a,1),512,if(gt(a,1),-2,512))'`,
                 '-c:v', `libvpx-vp9`,
                 '-an',
                 '-movflags',
