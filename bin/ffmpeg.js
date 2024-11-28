@@ -86,6 +86,8 @@ try {
     let startH, startM, startS, startMS;
     let durationH, durationM, durationS, durationMS;
     let crf;
+    let doReEncode, vidEncodeStr, vidEncodeArr;
+    let endH, endM, endS, endMS;
     switch (mode) {
         // 加浮水印
         case 0:
@@ -179,22 +181,22 @@ try {
             });
             start = `${startH}:${startM}:${startS}.${startMS}`;
 
-            let endH = readlineSync.question('End at hh: ', {
+            endH = readlineSync.question('End at hh: ', {
                 limit: /[0-9]{2}/,
                 limitMessage: 'Please input hh format time',
                 defaultInput: '00'
             });
-            let endM = readlineSync.question('mm: ', {
+            endM = readlineSync.question('mm: ', {
                 limit: /[0-5][0-9]/,
                 limitMessage: 'Please input mm format time',
                 defaultInput: '00'
             });
-            let endS = readlineSync.question('ss: ', {
+            endS = readlineSync.question('ss: ', {
                 limit: /[0-5][0-9]/,
                 limitMessage: 'Please input ss format time',
                 defaultInput: '00'
             });
-            let endMS = readlineSync.question('ms: ', {
+            endMS = readlineSync.question('ms: ', {
                 limit: /[0-9][0-9][0-9]/,
                 limitMessage: 'Please input ms format time',
                 defaultInput: '000'
@@ -280,14 +282,14 @@ try {
             console.log(`\nStart: ${start}`);
             console.log(`Duration: ${duration}\n`);
 
-            let doReEncode = readlineSync.question('Re-Encode with H.265? [y|N]: ', {
+            doReEncode = readlineSync.question('Re-Encode with H.265? [y|N]: ', {
                 limit: /y|N/,
                 limitMessage: 'Please input [y|N]',
                 defaultInput: 'N'
             });
 
-            let vidEncodeStr = /y/.test(doReEncode) ? '-c:v libx265' : '-c copy';
-            let vidEncodeArr = /y/.test(doReEncode) ? ['-c:v', 'libx265'] : ['-c:v', 'copy'];
+            vidEncodeStr = /y/.test(doReEncode) ? '-c:v libx265' : '-c copy';
+            vidEncodeArr = /y/.test(doReEncode) ? ['-c:v', 'libx265'] : ['-c:v', 'copy'];
 
             lettsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
             tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
