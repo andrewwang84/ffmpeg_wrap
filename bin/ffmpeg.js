@@ -221,12 +221,22 @@ try {
             tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
             tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
 
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -ss ${start} -to ${end} ${vidEncodeStr} ${tsStr} ${fileName}_cut.${ext}`;
-            args1 = [
-                '-i', `${fileName}.${ext}`,
-                '-ss', start,
-                '-to', end,
-            ];
+            if (/y/.test(doReEncode)) {
+                cmdPreview = `ffmpeg -i ${fileName}.${ext} -ss ${start} -to ${end} ${vidEncodeStr} ${tsStr} ${fileName}_cut.${ext}`;
+                args1 = [
+                    '-i', `${fileName}.${ext}`,
+                    '-ss', start,
+                    '-to', end,
+                ];
+            } else {
+                cmdPreview = `ffmpeg -ss ${start} -to ${end} -i ${fileName}.${ext} ${vidEncodeStr} ${tsStr} ${fileName}_cut.${ext}`;
+                args1 = [
+                    '-ss', start,
+                    '-to', end,
+                    '-i', `${fileName}.${ext}`,
+                ];
+            }
+
             args2 = [
                 `${fileName}_${start.replace(/:|\./g, '')}_${end.replace(/:|\./g, '')}_cut.${ext}`
             ];
@@ -294,13 +304,22 @@ try {
             lettsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
             tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
 
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -ss ${start} -t ${duration} ${vidEncodeStr} ${tsStr} ${fileName}_cut.${ext}`;
+            if (/y/.test(doReEncode)) {
+                cmdPreview = `ffmpeg -i ${fileName}.${ext} -ss ${start} -t ${duration} ${vidEncodeStr} ${tsStr} ${fileName}_cut.${ext}`;
+                args1 = [
+                    '-i', `${fileName}.${ext}`,
+                    '-ss', start,
+                    '-t', duration,
+                ];
+            } else {
+                cmdPreview = `ffmpeg -ss ${start} -t ${duration} -i ${fileName}.${ext} ${vidEncodeStr} ${tsStr} ${fileName}_cut.${ext}`;
+                args1 = [
+                    '-ss', start,
+                    '-t', duration,
+                    '-i', `${fileName}.${ext}`,
+                ];
+            }
 
-            args1 = [
-                '-i', `${fileName}.${ext}`,
-                '-ss', start,
-                '-t', duration,
-            ];
             args2 = [
                 `${fileName}_${start.replace(/:|\./g, '')}_${duration.replace(/:|\./g, '')}_duration_cut.${ext}`
             ];
