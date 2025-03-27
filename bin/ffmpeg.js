@@ -18,7 +18,7 @@ let modes = [
     'M3U8 Merge(test.m3u8)',
     'Video Concat',
     'Video -> Thumbnails',
-    'Video Size and Bitrate Reduce',
+    'Video Re-encode',
     'Remove Audio',
     'Re-Encode to Telegram Webm',
     'Cut & Re-Encode to Telegram Webm',
@@ -213,9 +213,9 @@ try {
             });
 
             vidEncodeStr = /y/.test(doReEncode) ? '-c:v libx265' : '-c copy';
-            vidEncodeArr = /y/.test(doReEncode) ? ['-c:v', 'libx265'] : ['-c:v', 'copy'];
+            vidEncodeArr = /y/.test(doReEncode) ? ['-c:v', 'libx265'] : ['-c', 'copy'];
 
-            lettsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
+            let tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
             tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
 
             tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
@@ -299,9 +299,9 @@ try {
             });
 
             vidEncodeStr = /y/.test(doReEncode) ? '-c:v libx265' : '-c copy';
-            vidEncodeArr = /y/.test(doReEncode) ? ['-c:v', 'libx265'] : ['-c:v', 'copy'];
+            vidEncodeArr = /y/.test(doReEncode) ? ['-c:v', 'libx265'] : ['-c', 'copy'];
 
-            lettsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
+            tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
             tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
 
             if (/y/.test(doReEncode)) {
@@ -410,9 +410,21 @@ try {
                 '-i', file
             ];
             break;
-        // 影片有損縮小大小 & 碼率
+        // 影片重新編碼
         case 6:
-            crf = readlineSync.question("crf (Default: 23): ", {
+            let videoEncode = readlineSync.question("Video encode method? (Default: libx265): ", {
+                limitMessage: 'Video encode',
+                defaultInput: 'libx265'
+            });
+            let audioEncode = readlineSync.question("Audio encode method? (Default: copy): ", {
+                limitMessage: 'Audio encode',
+                defaultInput: 'copy'
+            });
+            let audioBitRate = readlineSync.question("Audio Bitrate? (Default: 320): ", {
+                limitMessage: 'Audio Bitrate',
+                defaultInput: `320`
+            });
+            let crf = readlineSync.question("crf (Default: 23): ", {
                 limit: /[0-9]+/,
                 limitMessage: 'crf',
                 defaultInput: '23'
@@ -421,17 +433,27 @@ try {
                 limitMessage: 'preset',
                 defaultInput: 'medium'
             });
-            console.log(`\ncrf: ${crf}\n`);
-            console.log(`\preset: ${preset}\n`);
 
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v libx265 -crf ${crf} -preset ${preset} -c:a copy ${fileName}_re.${ext}`;
-            args = [
+            audioBitRate = `${audioBitRate}k`;
+
+            tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
+            tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
+
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v ${videoEncode} -crf ${crf} -preset ${preset} -c:a ${audioEncode} -b:a ${audioBitRate} ${tsStr} ${fileName}_re.${ext}`;
+            args1 = [
                 '-i', `${fileName}.${ext}`,
-                '-c:v', `libx265`,
+                '-c:v', `${videoEncode}`,
                 '-crf', `${crf}`,
                 '-preset', `${preset}`,
+                '-c:a', `${audioEncode}`,
+                '-b:a', `${audioBitRate}`,
+            ];
+
+            args2 = [
                 `${fileName}_re.${ext}`
             ];
+
+            args = [...args1, ...tsArr, ...args2];
             break;
         // 移除音軌
         case 7:
@@ -498,7 +520,7 @@ try {
             console.log(`\nStart: ${start}`);
             console.log(`Duration: ${duration}\n`);
 
-            lettsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
+            tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
             tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
 
             crf = readlineSync.question('crf [24]: ', {
