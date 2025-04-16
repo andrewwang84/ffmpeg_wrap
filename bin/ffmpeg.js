@@ -424,7 +424,7 @@ try {
                 limitMessage: 'Audio Bitrate',
                 defaultInput: `320`
             });
-            let crf = readlineSync.question("crf (Default: 23): ", {
+            crf = readlineSync.question("crf (Default: 23): ", {
                 limit: /[0-9]+/,
                 limitMessage: 'crf',
                 defaultInput: '23'
@@ -433,13 +433,17 @@ try {
                 limitMessage: 'preset',
                 defaultInput: 'medium'
             });
+            let extension = readlineSync.question(`副檔名 (Current: ${ext}): `, {
+                limitMessage: '副檔名',
+                defaultInput: ext
+            });
 
             audioBitRate = `${audioBitRate}k`;
 
             tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
             tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
 
-            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v ${videoEncode} -crf ${crf} -preset ${preset} -c:a ${audioEncode} -b:a ${audioBitRate} ${tsStr} ${fileName}_re.${ext}`;
+            cmdPreview = `ffmpeg -i ${fileName}.${ext} -c:v ${videoEncode} -crf ${crf} -preset ${preset} -c:a ${audioEncode} -b:a ${audioBitRate} ${tsStr} ${fileName}_re.${extension}`;
             args1 = [
                 '-i', `${fileName}.${ext}`,
                 '-c:v', `${videoEncode}`,
@@ -450,7 +454,7 @@ try {
             ];
 
             args2 = [
-                `${fileName}_re.${ext}`
+                `${fileName}_re.${extension}`
             ];
 
             args = [...args1, ...tsArr, ...args2];
