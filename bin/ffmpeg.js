@@ -215,7 +215,7 @@ try {
             vidEncodeStr = /y/.test(doReEncode) ? '-c:v libx265' : '-c copy';
             vidEncodeArr = /y/.test(doReEncode) ? ['-c:v', 'libx265'] : ['-c', 'copy'];
 
-            let tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
+            tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
             tsArr = /ts/.test(ext) ? ['-map', '0:v', '-map', '0:a'] : [];
 
             tsStr = /ts/.test(ext) ? '-map 0:v -map 0:a' : '';
