@@ -1,7 +1,7 @@
 {
   "name": "ffmpeg-wrap",
-  "version": "1.0.4",
-  "description": "",
+  "version": "1.0.5",
+  "description": "FFmpeg CLI wrapper for common video operations",
   "bin": {
     "vid": "./bin/ffmpeg.js",
     "archive": "./bin/archive.js"
