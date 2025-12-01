@@ -68,7 +68,7 @@ const WATERMARK_POSITION_NAMES = [
     'Bottom Right'
 ];
 
-const SUPPORTED_EXTENSIONS = /mp4|ts|tp|mkv|flv|png|gif/;
+const SUPPORTED_EXTENSIONS = /mp4|ts|tp|mkv|flv|png|gif|webm/;
 const WATERMARK_FILE = 'Logo-crop2.png';
 const WATERMARK_WIDTH = 302;
 const WATERMARK_HEIGHT = 28;
@@ -152,13 +152,13 @@ function askForVideoEncode() {
     VIDEO_CODECS.forEach((codec, index) => {
         console.log(`  [${index + 1}] ${codec}`);
     });
-    
+
     const codecAnswer = readlineSync.question('Select [1]: ', {
         limit: /^[1-3]?$/,
         limitMessage: 'Please input 1-3',
         defaultInput: '1'
     });
-    
+
     const codecIndex = codecAnswer === '' ? 0 : parseInt(codecAnswer) - 1;
     const codec = VIDEO_CODECS[codecIndex];
     console.log(`Video Codec: [${codecIndex + 1}] ${codec}\n`);
@@ -183,13 +183,13 @@ function askForVideoEncode() {
     PRESETS.forEach((preset, index) => {
         console.log(`  [${index + 1}] ${preset}`);
     });
-    
+
     const presetAnswer = readlineSync.question('Select [4]: ', {
         limit: /^[1-6]?$/,
         limitMessage: 'Please input 1-6',
         defaultInput: '4'
     });
-    
+
     const presetIndex = presetAnswer === '' ? 3 : parseInt(presetAnswer) - 1;
     const preset = PRESETS[presetIndex];
     console.log(`Preset: [${presetIndex + 1}] ${preset}\n`);
@@ -219,13 +219,13 @@ function askForAudioEncode() {
     AUDIO_CODECS.forEach((codec, index) => {
         console.log(`  [${index + 1}] ${codec}`);
     });
-    
+
     const codecAnswer = readlineSync.question('Select [1]: ', {
         limit: /^[1-3]?$/,
         limitMessage: 'Please input 1-3',
         defaultInput: '1'
     });
-    
+
     const codecIndex = codecAnswer === '' ? 0 : parseInt(codecAnswer) - 1;
     const codec = AUDIO_CODECS[codecIndex];
     console.log(`Audio Codec: [${codecIndex + 1}] ${codec}\n`);
@@ -243,13 +243,13 @@ function askForAudioEncode() {
     AUDIO_BITRATES.forEach((bitrate, index) => {
         console.log(`  [${index + 1}] ${bitrate}`);
     });
-    
+
     const bitrateAnswer = readlineSync.question('Select [3]: ', {
         limit: /^[1-4]?$/,
         limitMessage: 'Please input 1-4',
         defaultInput: '3'
     });
-    
+
     const bitrateIndex = bitrateAnswer === '' ? 2 : parseInt(bitrateAnswer) - 1;
     const bitrate = AUDIO_BITRATES[bitrateIndex];
     console.log(`Audio Bitrate: [${bitrateIndex + 1}] ${bitrate}\n`);
