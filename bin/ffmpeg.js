@@ -25,10 +25,9 @@ const MODES = {
     VIDEO_CONCAT: 3,
     VIDEO_TO_THUMBNAILS: 4,
     VIDEO_REENCODE: 5,
-    REMOVE_AUDIO: 6,
-    TELEGRAM_WEBM: 7,
-    CUT_AND_TELEGRAM_WEBM: 8,
-    LINE_APNG_TO_TELEGRAM_WEBM: 9
+    TELEGRAM_WEBM: 6,
+    CUT_AND_TELEGRAM_WEBM: 7,
+    LINE_APNG_TO_TELEGRAM_WEBM: 8
 };
 
 const MODE_NAMES = [
@@ -38,7 +37,6 @@ const MODE_NAMES = [
     'Video Concat',
     'Video -> Thumbnails',
     'Video Re-encode',
-    'Remove Audio',
     'Re-Encode to Telegram Webm',
     'Cut & Re-Encode to Telegram Webm',
     'Line APNG to Telegram Webm'
@@ -75,7 +73,7 @@ const WATERMARK_HEIGHT = 28;
 const TELEGRAM_WEBM_SCALE = "scale='if(eq(a,1),512,if(gt(a,1),512,-2))':'if(eq(a,1),512,if(gt(a,1),-2,512))'";
 
 const VIDEO_CODECS = ['copy', 'libx264', 'libx265'];
-const AUDIO_CODECS = ['copy', 'aac', 'libopus'];
+const AUDIO_CODECS = ['copy', 'aac', 'libopus', 'none'];
 const PRESETS = ['ultrafast', 'veryfast', 'faster', 'medium', 'slower', 'veryslow'];
 const AUDIO_BITRATES = ['96k', '128k', '192k', '320k'];
 
@@ -221,8 +219,8 @@ function askForAudioEncode() {
     });
 
     const codecAnswer = readlineSync.question('Select [1]: ', {
-        limit: /^[1-3]?$/,
-        limitMessage: 'Please input 1-3',
+        limit: /^[1-4]?$/,
+        limitMessage: 'Please input 1-4',
         defaultInput: '1'
     });
 
@@ -235,6 +233,14 @@ function askForAudioEncode() {
             str: '-c:a copy',
             arr: ['-c:a', 'copy'],
             codec: 'copy'
+        };
+    }
+
+    if (codec === 'none') {
+        return {
+            str: '-an',
+            arr: ['-an'],
+            codec: 'none'
         };
     }
 
@@ -519,7 +525,8 @@ function handleVideoReencode(fileName, extension) {
 
     const { arr: tsArr } = getTsMapArgs(extension);
 
-    const outputFile = `${fileName}_re.${outputExtension}`;
+    const suffix = audioEncode.codec === 'none' ? '_mute' : '_re';
+    const outputFile = `${fileName}${suffix}.${outputExtension}`;
     const cmdPreview = `ffmpeg -i ${fileName}.${extension} ${videoEncode.str} ${audioEncode.str} ${tsArr.join(' ')} ${outputFile}`;
     const args = [
         '-i', `${fileName}.${extension}`,
@@ -533,23 +540,7 @@ function handleVideoReencode(fileName, extension) {
 }
 
 /**
- * 模式 6: 移除音軌
- */
-function handleRemoveAudio(fileName, extension) {
-    const outputFile = `${fileName}_mute.${extension}`;
-    const cmdPreview = `ffmpeg -i ${fileName}.${extension} -c:v copy -an ${outputFile}`;
-    const args = [
-        '-i', `${fileName}.${extension}`,
-        '-c:v', 'copy',
-        '-an',
-        outputFile
-    ];
-
-    return { args, cmdPreview };
-}
-
-/**
- * 模式 7: 轉換為 Telegram WebM 格式
+ * 模式 6: 轉換為 Telegram WebM 格式
  */
 function handleTelegramWebm(fileName, extension) {
     const outputFile = `${fileName}_tg.webm`;
@@ -673,10 +664,6 @@ function main() {
 
         case MODES.VIDEO_REENCODE:
             result = handleVideoReencode(fileName, extension);
-            break;
-
-        case MODES.REMOVE_AUDIO:
-            result = handleRemoveAudio(fileName, extension);
             break;
 
         case MODES.TELEGRAM_WEBM:
