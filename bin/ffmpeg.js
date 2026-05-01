@@ -499,14 +499,42 @@ function handleVideoToThumbnails(file) {
     console.log(`\nStart: ${start}`);
     console.log(`End: ${end}\n`);
 
-    const cmdPreview = `ffmpeg -ss ${start} -t ${end} -i ${file} thumb%04d.png -hide_banner`;
-    const args = [
-        '-ss', start,
-        '-t', end,
-        '-i', file,
-        'thumb%04d.png',
-        '-hide_banner'
-    ];
+    const keyframeAnswer = readlineSync.question('Only extract keyframes (I-frames)? [Y/n]: ', {
+        defaultInput: 'Y'
+    });
+    const keyframeOnly = keyframeAnswer.toUpperCase() !== 'N';
+    console.log(`Keyframes only: ${keyframeOnly}\n`);
+
+    const { fileName } = parseFilePath(file);
+
+    const now = new Date();
+    const pad = (n, len = 2) => String(n).padStart(len, '0');
+    const timestamp = `${pad(now.getFullYear() % 100)}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const outputPattern = `${fileName}_thumb_${timestamp}_%06d.png`;
+
+    let cmdPreview, args;
+
+    if (keyframeOnly) {
+        cmdPreview = `ffmpeg -ss ${start} -t ${end} -i ${file} -vf "select='eq(pict_type,I)'" -vsync vfr ${outputPattern} -hide_banner`;
+        args = [
+            '-ss', start,
+            '-t', end,
+            '-i', file,
+            '-vf', "select='eq(pict_type,I)'",
+            '-vsync', 'vfr',
+            outputPattern,
+            '-hide_banner'
+        ];
+    } else {
+        cmdPreview = `ffmpeg -ss ${start} -t ${end} -i ${file} ${outputPattern} -hide_banner`;
+        args = [
+            '-ss', start,
+            '-t', end,
+            '-i', file,
+            outputPattern,
+            '-hide_banner'
+        ];
+    }
 
     return { args, cmdPreview };
 }

@@ -4,7 +4,8 @@
   "description": "FFmpeg CLI wrapper for common video operations",
   "bin": {
     "vid": "./bin/ffmpeg.js",
-    "archive": "./bin/archive.js"
+    "archive": "./bin/archive.js",
+    "fname": "./bin/fname.js"
   },
   "author": "AndrewWang",
   "license": "ISC",
