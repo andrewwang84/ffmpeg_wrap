@@ -96,14 +96,20 @@ function formatFileName(filePath) {
     const nameWithoutExt = basename.slice(0, basename.length - ext.length);
 
     // 嘗試拆解：YYYYMMDD[HHSS]_station_recorder_title
-    const match = nameWithoutExt.match(/^(\d{8,12})_([^_]+)_([^_]+)_([\s\S]+)$/);
+    const match1 = nameWithoutExt.match(/^(\d{8,12})_([^_]+)_([^_]+)_([\s\S]+)$/);
+    // 嘗試拆解：YYYYMMDD-HHMMSS station title（空格分隔，無 recorder）
+    const match2 = nameWithoutExt.match(/^(\d{8})-\d{6}\s+(\S+)\s+([\s\S]+)$/);
 
     let prefix;
-    if (match) {
-        const [, dateFull, station, recorder, title] = match;
+    if (match1) {
+        const [, dateFull, station, recorder, title] = match1;
         // YYYYMMDD... → 取第 3~8 個字元（index 2..8），得 YYMMDD
         const date = dateFull.slice(2, 8);
-        prefix = `${date}_${station}_${recorder}_${title}`;
+        prefix = `${date} ${station} ${recorder} ${title}`;
+    } else if (match2) {
+        const [, dateFull, station, title] = match2;
+        const date = dateFull.slice(2, 8);
+        prefix = `${date} ${station} ${title}`;
     } else {
         // 無日期前綴，直接使用原始檔名（不含副檔名）
         prefix = nameWithoutExt;

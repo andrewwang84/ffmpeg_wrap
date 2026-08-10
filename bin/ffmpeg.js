@@ -4,7 +4,7 @@
  * FFmpeg Wrapper CLI Tool
  *
  * 用途：簡化 FFmpeg 常用操作的命令行工具
- * 使用方式：vid [fileName] [fileName]......
+ * 使用方式：vid [fileName]
  *
  * npm i -g .
  * npm uninstall -g ffmpeg_wrap
@@ -13,64 +13,31 @@
  */
 
 const readlineSync = require('readline-sync');
-const fs = require('fs');
 const { spawn } = require('child_process');
 
 // ==================== 常數定義 ====================
 
 const MODES = {
-    ADD_WATERMARK: 0,
-    CUT_BY_TIME: 1,
-    CUT_BY_DURATION: 2,
-    VIDEO_CONCAT: 3,
-    VIDEO_TO_THUMBNAILS: 4,
-    VIDEO_REENCODE: 5,
-    TELEGRAM_WEBM: 6,
-    CUT_AND_TELEGRAM_WEBM: 7,
-    LINE_APNG_TO_TELEGRAM_WEBM: 8
+    VIDEO_REENCODE: 0,
+    TELEGRAM_WEBM: 1,
+    CUT_AND_TELEGRAM_WEBM: 2,
+    LINE_APNG_TO_TELEGRAM_WEBM: 3,
+    TELEGRAM_GIF: 4
 };
 
 const MODE_NAMES = [
-    'Add Watermark',
-    'Cut Video by Time',
-    'Cut Video by Duration',
-    'Video Concat',
-    'Video -> Thumbnails',
     'Video Re-encode',
     'Re-Encode to Telegram Webm',
     'Cut & Re-Encode to Telegram Webm',
-    'Line APNG to Telegram Webm'
-];
-
-const RESOLUTIONS = [
-    { name: '1280x720', watermarkPos: '978:692' },
-    { name: '1920x1080', watermarkPos: '1618:1052' },
-    { name: '1080x1920', watermarkPos: '778:1892' },
-    { name: '3840x2160', watermarkPos: '3538:2132' },
-    { name: '2160x3840', watermarkPos: '1858:3814' },
-    { name: '4096x2160', watermarkPos: '3794:2132' },
-    { name: 'Other', watermarkPos: '1' }
-];
-
-const WATERMARK_POSITIONS = {
-    TOP_LEFT: 0,
-    TOP_RIGHT: 1,
-    BOTTOM_LEFT: 2,
-    BOTTOM_RIGHT: 3
-};
-
-const WATERMARK_POSITION_NAMES = [
-    'Top Left',
-    'Top Right',
-    'Bottom Left',
-    'Bottom Right'
+    'Line APNG to Telegram Webm',
+    'Re-Encode to Telegram Gif'
 ];
 
 const SUPPORTED_EXTENSIONS = /mp4|ts|tp|mkv|flv|png|gif|webm/;
-const WATERMARK_FILE = 'Logo-crop2.png';
-const WATERMARK_WIDTH = 302;
-const WATERMARK_HEIGHT = 28;
 const TELEGRAM_WEBM_SCALE = "scale='if(eq(a,1),512,if(gt(a,1),512,-2))':'if(eq(a,1),512,if(gt(a,1),-2,512))'";
+// Telegram Gif：維持比例，寬度最大 1080（不放大），長寬皆對齊偶數
+const TELEGRAM_GIF_MAX_WIDTH = 1080;
+const TELEGRAM_GIF_SCALE = `scale='min(${TELEGRAM_GIF_MAX_WIDTH},trunc(iw/2)*2)':-2`;
 
 const VIDEO_CODECS = ['copy', 'libx264', 'libx265'];
 const AUDIO_CODECS = ['copy', 'aac', 'libopus', 'none'];
@@ -93,9 +60,8 @@ function parseFilePath(filePath) {
 /**
  * 詢問時間輸入 (hh:mm:ss.ms)
  * @param {string} label - 提示文字
- * @param {boolean} includeMilliseconds - 是否包含毫秒
  */
-function askForTime(label, includeMilliseconds = true) {
+function askForTime(label) {
     const hh = readlineSync.question(`${label} hh: `, {
         limit: /[0-9]{2}/,
         limitMessage: 'Please input hh format time',
@@ -112,16 +78,13 @@ function askForTime(label, includeMilliseconds = true) {
         defaultInput: '00'
     });
 
-    if (includeMilliseconds) {
-        const ms = readlineSync.question('ms: ', {
-            limit: /[0-9][0-9][0-9]/,
-            limitMessage: 'Please input ms format time',
-            defaultInput: '000'
-        });
-        return `${hh}:${mm}:${ss}.${ms}`;
-    }
+    const ms = readlineSync.question('ms: ', {
+        limit: /[0-9][0-9][0-9]/,
+        limitMessage: 'Please input ms format time',
+        defaultInput: '000'
+    });
 
-    return `${hh}:${mm}:${ss}`;
+    return `${hh}:${mm}:${ss}.${ms}`;
 }
 
 /**
@@ -278,26 +241,6 @@ function getTsMapArgs(extension) {
 }
 
 /**
- * 計算浮水印位置
- */
-function calculateWatermarkPosition(positionMode, width, height) {
-    const offsetW = width - WATERMARK_WIDTH;
-    const offsetH = height - WATERMARK_HEIGHT;
-
-    switch (positionMode) {
-        case WATERMARK_POSITIONS.TOP_LEFT:
-            return '2:2';
-        case WATERMARK_POSITIONS.TOP_RIGHT:
-            return `${offsetW}:2`;
-        case WATERMARK_POSITIONS.BOTTOM_LEFT:
-            return `2:${offsetH}`;
-        case WATERMARK_POSITIONS.BOTTOM_RIGHT:
-        default:
-            return `${offsetW}:${offsetH}`;
-    }
-}
-
-/**
  * 格式化時間字串為檔案名稱（移除特殊字元）
  */
 function formatTimeForFilename(timeStr) {
@@ -312,242 +255,37 @@ function executeFFmpeg(args, previewCommand, fileName, extension) {
     console.log(`Execute Command:\n${previewCommand}`);
     console.log('='.repeat(60) + '\n');
 
-    const proc = spawn('ffmpeg', args);
+    // stdio: 'inherit' 讓 ffmpeg 直接接上目前的終端機
+    // 這樣 ffmpeg 的互動提示（例如 File exists. Overwrite? [y/N]）才能輸入，
+    // 否則 stdin 是沒人寫入的 pipe，程式會一直卡住
+    const proc = spawn('ffmpeg', args, { stdio: 'inherit' });
 
-    proc.stdout.on('data', (data) => {
-        console.log(`[stdout] ${data}`);
+    proc.on('error', (err) => {
+        console.error(`[error] ${err}`);
     });
 
-    proc.stderr.setEncoding('utf8')
-        .on('data', (data) => {
-            console.log(`[stderr] ${data}`);
-        })
-        .on('message', (msg) => {
-            console.log(`[message] ${msg}`);
-        })
-        .on('error', (err) => {
-            console.error(`[error] ${err}`);
-        })
-        .on('exit', (code, signal) => {
-            console.log(`[exit] code:${code} signal:${signal}`);
-        })
-        .on('close', () => {
-            console.log(`\n${'='.repeat(60)}`);
-            console.log(`[close] ${fileName}.${extension} Done`);
-            console.log('='.repeat(60));
-        });
+    proc.on('close', (code, signal) => {
+        console.log(`\n${'='.repeat(60)}`);
+        console.log(`[exit] code:${code} signal:${signal}`);
+        console.log(`[close] ${fileName}.${extension} Done`);
+        console.log('='.repeat(60));
+        if (code) {
+            process.exitCode = code;
+        }
+    });
 }
 
 // ==================== 模式處理函數 ====================
 
 /**
- * 模式 0: 添加浮水印
- */
-function handleAddWatermark(fileName, extension) {
-    const resolutionNames = RESOLUTIONS.map(r => r.name);
-    const selectedResIndex = readlineSync.keyInSelect(resolutionNames, 'Resolution: ');
-
-    if (selectedResIndex === -1) {
-        throw '\nError: Program Stopped!!';
-    }
-
-    const selectedResolution = RESOLUTIONS[selectedResIndex];
-    const markPosMode = readlineSync.keyInSelect(WATERMARK_POSITION_NAMES, 'Mode: ', { defaultInput: '4' });
-    console.log(`\nMarkPosMode: [${markPosMode + 1}] ${WATERMARK_POSITION_NAMES[markPosMode]}\n`);
-
-    let width, height, videoSize;
-
-    // 自訂解析度
-    if (selectedResolution.name === 'Other') {
-        width = parseInt(readlineSync.question('Width: ', {
-            limit: /[0-9]+/,
-            limitMessage: 'Width',
-            defaultInput: '1920'
-        }));
-        height = parseInt(readlineSync.question('Height: ', {
-            limit: /[0-9]+/,
-            limitMessage: 'Height',
-            defaultInput: '1080'
-        }));
-        videoSize = `${width}x${height}`;
-    } else {
-        const [w, h] = selectedResolution.name.split('x');
-        width = parseInt(w);
-        height = parseInt(h);
-        videoSize = selectedResolution.name;
-    }
-
-    const markPos = calculateWatermarkPosition(markPosMode, width, height);
-    console.log(`${videoSize} => ${markPos}\n`);
-
-    const videoEncode = askForVideoEncode();
-    const audioEncode = askForAudioEncode();
-
-    const outputFile = `${fileName}_watermark.${extension}`;
-    const cmdPreview = `ffmpeg -i ${fileName}.${extension} -i ${WATERMARK_FILE} -filter_complex "overlay=${markPos}" ${videoEncode.str} ${audioEncode.str} ${outputFile}`;
-    const args = [
-        '-i', `${fileName}.${extension}`,
-        '-i', WATERMARK_FILE,
-        '-filter_complex', `overlay=${markPos}`,
-        ...videoEncode.arr,
-        ...audioEncode.arr,
-        outputFile
-    ];
-
-    return { args, cmdPreview };
-}
-
-/**
- * 模式 1: 依時間點裁切影片
- */
-function handleCutByTime(fileName, extension) {
-    const start = askForTime('Start at');
-    const end = askForTime('End at');
-
-    console.log(`\nStart: ${start}`);
-    console.log(`End: ${end}\n`);
-
-    const videoEncode = askForVideoEncode();
-    const audioEncode = askForAudioEncode();
-    const { str: tsStr, arr: tsArr } = getTsMapArgs(extension);
-
-    const outputFile = `${fileName}_${formatTimeForFilename(start)}_${formatTimeForFilename(end)}_cut.${extension}`;
-
-    let args1, cmdPreview;
-
-    // 重新編碼時，-ss 放在 -i 後面較精確
-    // 不重新編碼時，-ss 放在 -i 前面較快速
-    if (videoEncode.codec !== 'copy' || audioEncode.codec !== 'copy') {
-        cmdPreview = `ffmpeg -i ${fileName}.${extension} -ss ${start} -to ${end} ${videoEncode.str} ${audioEncode.str} ${tsStr} ${outputFile}`;
-        args1 = ['-i', `${fileName}.${extension}`, '-ss', start, '-to', end];
-    } else {
-        cmdPreview = `ffmpeg -ss ${start} -to ${end} -i ${fileName}.${extension} ${videoEncode.str} ${audioEncode.str} ${tsStr} ${outputFile}`;
-        args1 = ['-ss', start, '-to', end, '-i', `${fileName}.${extension}`];
-    }
-
-    const args = [...args1, ...videoEncode.arr, ...audioEncode.arr, ...tsArr, outputFile];
-
-    return { args, cmdPreview };
-}
-
-/**
- * 模式 2: 依持續時間裁切影片
- */
-function handleCutByDuration(fileName, extension) {
-    const start = askForTime('Start at');
-    const duration = askForTime('Duration');
-
-    console.log(`\nStart: ${start}`);
-    console.log(`Duration: ${duration}\n`);
-
-    const videoEncode = askForVideoEncode();
-    const audioEncode = askForAudioEncode();
-    const { str: tsStr, arr: tsArr } = getTsMapArgs(extension);
-
-    const outputFile = `${fileName}_${formatTimeForFilename(start)}_${formatTimeForFilename(duration)}_duration_cut.${extension}`;
-
-    let args1, cmdPreview;
-
-    if (videoEncode.codec !== 'copy' || audioEncode.codec !== 'copy') {
-        cmdPreview = `ffmpeg -i ${fileName}.${extension} -ss ${start} -t ${duration} ${videoEncode.str} ${audioEncode.str} ${tsStr} ${outputFile}`;
-        args1 = ['-i', `${fileName}.${extension}`, '-ss', start, '-t', duration];
-    } else {
-        cmdPreview = `ffmpeg -ss ${start} -t ${duration} -i ${fileName}.${extension} ${videoEncode.str} ${audioEncode.str} ${tsStr} ${outputFile}`;
-        args1 = ['-ss', start, '-t', duration, '-i', `${fileName}.${extension}`];
-    }
-
-    const args = [...args1, ...videoEncode.arr, ...audioEncode.arr, ...tsArr, outputFile];
-
-    return { args, cmdPreview };
-}
-
-/**
- * 模式 3: 影片合併
- */
-function handleVideoConcat(extension) {
-    const files = process.argv.slice(2);
-    let fileListContent = '';
-
-    for (const file of files) {
-        fileListContent += `file '${file}'\n`;
-    }
-
-    fs.writeFileSync('file.txt', fileListContent, 'utf8');
-    console.log('file.txt created with:', fileListContent);
-
-    const { fileName } = parseFilePath(files[0]);
-    const outputFile = `${fileName}_concat.${extension}`;
-    const cmdPreview = `ffmpeg -f concat -safe 0 -i file.txt -c copy ${outputFile}`;
-    const args = [
-        '-f', 'concat',
-        '-safe', '0',
-        '-i', 'file.txt',
-        '-c', 'copy',
-        outputFile
-    ];
-
-    return { args, cmdPreview };
-}
-
-/**
- * 模式 4: 影片轉縮圖
- */
-function handleVideoToThumbnails(file) {
-    const start = askForTime('Start at', false);
-    const end = askForTime('End at', false);
-
-    console.log(`\nStart: ${start}`);
-    console.log(`End: ${end}\n`);
-
-    const keyframeAnswer = readlineSync.question('Only extract keyframes (I-frames)? [Y/n]: ', {
-        defaultInput: 'Y'
-    });
-    const keyframeOnly = keyframeAnswer.toUpperCase() !== 'N';
-    console.log(`Keyframes only: ${keyframeOnly}\n`);
-
-    const { fileName } = parseFilePath(file);
-
-    const now = new Date();
-    const pad = (n, len = 2) => String(n).padStart(len, '0');
-    const timestamp = `${pad(now.getFullYear() % 100)}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-    const outputPattern = `${fileName}_thumb_${timestamp}_%06d.png`;
-
-    let cmdPreview, args;
-
-    if (keyframeOnly) {
-        cmdPreview = `ffmpeg -ss ${start} -t ${end} -i ${file} -vf "select='eq(pict_type,I)'" -vsync vfr ${outputPattern} -hide_banner`;
-        args = [
-            '-ss', start,
-            '-t', end,
-            '-i', file,
-            '-vf', "select='eq(pict_type,I)'",
-            '-vsync', 'vfr',
-            outputPattern,
-            '-hide_banner'
-        ];
-    } else {
-        cmdPreview = `ffmpeg -ss ${start} -t ${end} -i ${file} ${outputPattern} -hide_banner`;
-        args = [
-            '-ss', start,
-            '-t', end,
-            '-i', file,
-            outputPattern,
-            '-hide_banner'
-        ];
-    }
-
-    return { args, cmdPreview };
-}
-
-/**
- * 模式 5: 影片重新編碼
+ * 模式 1: 影片重新編碼
  */
 function handleVideoReencode(fileName, extension) {
     const videoEncode = askForVideoEncode();
     const audioEncode = askForAudioEncode();
 
-    const outputExtension = readlineSync.question(`副檔名 (Current: ${extension}): `, {
-        limitMessage: '副檔名',
+    const outputExtension = readlineSync.question(`File Extension (Current: ${extension}): `, {
+        limitMessage: 'File Extension',
         defaultInput: extension
     });
 
@@ -568,7 +306,7 @@ function handleVideoReencode(fileName, extension) {
 }
 
 /**
- * 模式 6: 轉換為 Telegram WebM 格式
+ * 模式 2: 轉換為 Telegram WebM 格式
  */
 function handleTelegramWebm(fileName, extension) {
     const outputFile = `${fileName}_tg.webm`;
@@ -588,7 +326,7 @@ function handleTelegramWebm(fileName, extension) {
 }
 
 /**
- * 模式 8: 裁切並轉換為 Telegram WebM 格式
+ * 模式 3: 裁切並轉換為 Telegram WebM 格式
  */
 function handleCutAndTelegramWebm(fileName, extension) {
     const start = askForTime('Start at');
@@ -625,7 +363,7 @@ function handleCutAndTelegramWebm(fileName, extension) {
 }
 
 /**
- * 模式 9: Line APNG 轉 Telegram WebM
+ * 模式 4: Line APNG 轉 Telegram WebM
  */
 function handleLineApngToTelegramWebm(fileName, extension) {
     const outputFile = `${fileName}_line_tg.webm`;
@@ -643,13 +381,45 @@ function handleLineApngToTelegramWebm(fileName, extension) {
     return { args, cmdPreview };
 }
 
+/**
+ * 模式 5: 轉換為 Telegram Gif（實際上是無音訊的 mp4）
+ * 固定使用 H.265 / preset faster，移除音訊，維持比例且寬度最大 1080
+ */
+function handleTelegramGif(fileName, extension) {
+    const crf = readlineSync.question('CRF (0-51) [23]: ', {
+        limit: /^([0-9]|[1-4][0-9]|5[0-1])$/,
+        limitMessage: 'Please input 0-51',
+        defaultInput: '23'
+    });
+    console.log(`\nCRF: ${crf}`);
+    console.log('Codec: libx265 / Preset: faster / Audio: none');
+    console.log(`Max Width: ${TELEGRAM_GIF_MAX_WIDTH}\n`);
+
+    const outputFile = `${fileName}_tg_gif.mp4`;
+    const cmdPreview = `ffmpeg -i ${fileName}.${extension} -vf "${TELEGRAM_GIF_SCALE}" -c:v libx265 -tag:v hvc1 -crf ${crf} -preset faster -pix_fmt yuv420p -an -movflags +faststart ${outputFile}`;
+    const args = [
+        '-i', `${fileName}.${extension}`,
+        '-vf', TELEGRAM_GIF_SCALE,
+        '-c:v', 'libx265',
+        '-tag:v', 'hvc1',
+        '-crf', crf,
+        '-preset', 'faster',
+        '-pix_fmt', 'yuv420p',
+        '-an',
+        '-movflags', '+faststart',
+        outputFile
+    ];
+
+    return { args, cmdPreview };
+}
+
 // ==================== 主程式 ====================
 
 function main() {
     const file = process.argv[2];
 
     if (!file) {
-        throw 'Usage: vid [fileName] [fileName]......';
+        throw 'Usage: vid [fileName]';
     }
 
     const mode = readlineSync.keyInSelect(MODE_NAMES, 'Select Mode');
@@ -670,26 +440,6 @@ function main() {
     let result;
 
     switch (mode) {
-        case MODES.ADD_WATERMARK:
-            result = handleAddWatermark(fileName, extension);
-            break;
-
-        case MODES.CUT_BY_TIME:
-            result = handleCutByTime(fileName, extension);
-            break;
-
-        case MODES.CUT_BY_DURATION:
-            result = handleCutByDuration(fileName, extension);
-            break;
-
-        case MODES.VIDEO_CONCAT:
-            result = handleVideoConcat(extension);
-            break;
-
-        case MODES.VIDEO_TO_THUMBNAILS:
-            result = handleVideoToThumbnails(file);
-            break;
-
         case MODES.VIDEO_REENCODE:
             result = handleVideoReencode(fileName, extension);
             break;
@@ -704,6 +454,10 @@ function main() {
 
         case MODES.LINE_APNG_TO_TELEGRAM_WEBM:
             result = handleLineApngToTelegramWebm(fileName, extension);
+            break;
+
+        case MODES.TELEGRAM_GIF:
+            result = handleTelegramGif(fileName, extension);
             break;
 
         default:
